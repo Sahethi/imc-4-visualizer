@@ -15,6 +15,9 @@ function getLimit(algorithm: Algorithm, symbol: ProsperitySymbol): number {
     GIFT_BASKET: 60,
     COCONUT: 300,
     COCONUT_COUPON: 600,
+    // IMC Prosperity 4 — Round 1 & 2
+    ASH_COATED_OSMIUM: 80,
+    INTARIAN_PEPPER_ROOT: 80,
   };
 
   if (knownLimits[symbol] !== undefined) {
