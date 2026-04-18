@@ -6,6 +6,7 @@ import { Chart } from './Chart.tsx';
 
 function getLimit(algorithm: Algorithm, symbol: ProsperitySymbol): number {
   const knownLimits: Record<string, number> = {
+    // IMC Prosperity 2 & 3
     AMETHYSTS: 20,
     STARFRUIT: 20,
     ORCHIDS: 100,
@@ -15,6 +16,9 @@ function getLimit(algorithm: Algorithm, symbol: ProsperitySymbol): number {
     GIFT_BASKET: 60,
     COCONUT: 300,
     COCONUT_COUPON: 600,
+    // IMC Prosperity 4 — Round 0 (Tutorial)
+    EMERALDS: 80,
+    TOMATOES: 80,
     // IMC Prosperity 4 — Round 1 & 2
     ASH_COATED_OSMIUM: 80,
     INTARIAN_PEPPER_ROOT: 80,
