@@ -22,9 +22,13 @@ HighchartsOfflineExporting(Highcharts);
 // This function is a little workaround to be able to get the options a theme overrides
 function getThemeOptions(theme: (highcharts: typeof Highcharts) => void): Highcharts.Options {
   const highchartsMock = {
+    addEvent: () => {},
+    removeEvent: () => {},
+    fireEvent: () => {},
     _modules: {
       'Core/Globals.js': {
         theme: null,
+        win: typeof window !== 'undefined' ? window : { dispatchEvent: () => {} },
       },
       'Core/Defaults.js': {
         setOptions: () => {
@@ -34,9 +38,13 @@ function getThemeOptions(theme: (highcharts: typeof Highcharts) => void): Highch
     },
   };
 
-  theme(highchartsMock as any);
+  try {
+    theme(highchartsMock as any);
+  } catch {
+    // Theme mock may be incomplete for newer Highcharts versions; fall back gracefully
+  }
 
-  return highchartsMock._modules['Core/Globals.js'].theme! as Highcharts.Options;
+  return (highchartsMock._modules['Core/Globals.js'].theme ?? {}) as Highcharts.Options;
 }
 
 interface ChartProps {
