@@ -1,6 +1,7 @@
 import Highcharts from 'highcharts/highstock';
 import HighchartsAccessibility from 'highcharts/modules/accessibility';
 import HighchartsExporting from 'highcharts/modules/exporting';
+import HighchartsMore from 'highcharts/highcharts-more';
 import HighchartsOfflineExporting from 'highcharts/modules/offline-exporting';
 import HighchartsHighContrastDarkTheme from 'highcharts/themes/high-contrast-dark';
 import HighchartsReact from 'highcharts-react-official';
@@ -12,6 +13,7 @@ import { VisualizerCard } from './VisualizerCard.tsx';
 
 HighchartsAccessibility(Highcharts);
 HighchartsExporting(Highcharts);
+HighchartsMore(Highcharts);
 HighchartsOfflineExporting(Highcharts);
 
 // Highcharts themes are distributed as Highcharts extensions

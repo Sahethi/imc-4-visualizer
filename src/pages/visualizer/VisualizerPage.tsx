@@ -10,6 +10,7 @@ import { PlainValueObservationChart } from './PlainValueObservationChart.tsx';
 import { PositionChart } from './PositionChart.tsx';
 import { ProductPriceChart } from './ProductPriceChart.tsx';
 import { ProfitLossChart } from './ProfitLossChart.tsx';
+import { SpreadChart } from './SpreadChart.tsx';
 import { TimestampsCard } from './TimestampsCard.tsx';
 import { TransportChart } from './TransportChart.tsx';
 import { VisualizerCard } from './VisualizerCard.tsx';
@@ -66,6 +67,12 @@ export function VisualizerPage(): ReactNode {
     symbolColumns.push(
       <Grid.Col key={`${symbol} - symbol`} span={{ xs: 12, sm: 6 }}>
         <VolumeChart symbol={symbol} />
+      </Grid.Col>,
+    );
+
+    symbolColumns.push(
+      <Grid.Col key={`${symbol} - spread`} span={{ xs: 12, sm: 6 }}>
+        <SpreadChart symbol={symbol} />
       </Grid.Col>,
     );
 
