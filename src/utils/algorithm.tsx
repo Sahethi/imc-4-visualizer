@@ -30,6 +30,48 @@ export class AlgorithmParseError extends Error {
   }
 }
 
+interface StructuredLogEntry {
+  sandboxLog: string;
+  lambdaLog: string;
+  timestamp: number;
+}
+
+interface StructuredLogFile {
+  activitiesLog: string;
+  logs: StructuredLogEntry[];
+  tradeHistory: Trade[];
+}
+
+function parseActivityLogRow(line: string): ActivityLogRow {
+  const columns = line.split(';');
+
+  return {
+    day: Number(columns[0]),
+    timestamp: Number(columns[1]),
+    product: columns[2],
+    bidPrices: getColumnValues(columns, [3, 5, 7]),
+    bidVolumes: getColumnValues(columns, [4, 6, 8]),
+    askPrices: getColumnValues(columns, [9, 11, 13]),
+    askVolumes: getColumnValues(columns, [10, 12, 14]),
+    midPrice: Number(columns[15]),
+    profitLoss: Number(columns[16]),
+  };
+}
+
+function parseActivityLogLines(logLines: string[]): ActivityLogRow[] {
+  if (logLines.length === 0) {
+    return [];
+  }
+
+  const hasHeaderMarker = logLines[0] === 'Activities log:';
+  const startIndex = hasHeaderMarker ? 2 : 1;
+
+  return logLines
+    .slice(startIndex)
+    .filter(line => line !== '')
+    .map(parseActivityLogRow);
+}
+
 function getColumnValues(columns: string[], indices: number[]): number[] {
   const values: number[] = [];
 
@@ -73,6 +115,10 @@ function getActivityLogs(logLines: string[]): ActivityLogRow[] {
   }
 
   return rows;
+}
+
+function getActivityLogsFromStructuredFile(logs: StructuredLogFile): ActivityLogRow[] {
+  return parseActivityLogLines(logs.activitiesLog.trim().split(/\r?\n/));
 }
 
 function decompressListings(compressed: CompressedListing[]): Record<ProsperitySymbol, Listing> {
@@ -191,6 +237,10 @@ function decompressDataRow(compressed: CompressedAlgorithmDataRow, sandboxLogs: 
   };
 }
 
+function decompressStructuredLogEntry(entry: StructuredLogEntry): AlgorithmDataRow {
+  return decompressDataRow(JSON.parse(entry.lambdaLog), entry.sandboxLog.trim());
+}
+
 function getAlgorithmData(logLines: string[]): AlgorithmDataRow[] {
   const headerIndex = logLines.indexOf('Sandbox logs:');
   if (headerIndex === -1) {
@@ -241,7 +291,53 @@ function getAlgorithmData(logLines: string[]): AlgorithmDataRow[] {
   return rows;
 }
 
+function getAlgorithmDataFromStructuredFile(logs: StructuredLogFile): AlgorithmDataRow[] {
+  return logs.logs.map(decompressStructuredLogEntry);
+}
+
+function parseStructuredLogFile(logs: string, summary?: AlgorithmSummary): Algorithm | null {
+  let parsedLogs: unknown;
+
+  try {
+    parsedLogs = JSON.parse(logs);
+  } catch {
+    return null;
+  }
+
+  if (
+    typeof parsedLogs !== 'object' ||
+    parsedLogs === null ||
+    !('activitiesLog' in parsedLogs) ||
+    !('logs' in parsedLogs) ||
+    typeof (parsedLogs as { activitiesLog?: unknown }).activitiesLog !== 'string' ||
+    !Array.isArray((parsedLogs as { logs?: unknown }).logs)
+  ) {
+    return null;
+  }
+
+  const structuredLogs = parsedLogs as StructuredLogFile;
+
+  return {
+    summary,
+    activityLogs: getActivityLogsFromStructuredFile(structuredLogs),
+    data: getAlgorithmDataFromStructuredFile(structuredLogs),
+  };
+}
+
 export function parseAlgorithmLogs(logs: string, summary?: AlgorithmSummary): Algorithm {
+  const structuredLogs = parseStructuredLogFile(logs, summary);
+  if (structuredLogs !== null) {
+    if (structuredLogs.activityLogs.length === 0 && structuredLogs.data.length === 0) {
+      throw new AlgorithmParseError('Structured log file is empty.');
+    }
+
+    if (structuredLogs.activityLogs.length === 0 || structuredLogs.data.length === 0) {
+      throw new AlgorithmParseError('Structured log file is missing activity or algorithm data.');
+    }
+
+    return structuredLogs;
+  }
+
   const logLines = logs.trim().split(/\r?\n/);
 
   const activityLogs = getActivityLogs(logLines);

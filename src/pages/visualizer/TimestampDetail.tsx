@@ -6,6 +6,7 @@ import { useStore } from '../../store.ts';
 import { formatNumber } from '../../utils/format.ts';
 import { ConversionObservationsTable } from './ConversionObservationsTable.tsx';
 import { ListingsTable } from './ListingsTable.tsx';
+import { OrderLifecycleTable } from './OrderLifecycleTable.tsx';
 import { OrderDepthTable } from './OrderDepthTable.tsx';
 import { OrdersTable } from './OrdersTable.tsx';
 import { PlainValueObservationsTable } from './PlainValueObservationsTable.tsx';
@@ -17,9 +18,8 @@ export interface TimestampDetailProps {
   row: AlgorithmDataRow;
 }
 
-export function TimestampDetail({
-  row: { state, orders, conversions, traderData, algorithmLogs, sandboxLogs },
-}: TimestampDetailProps): ReactNode {
+export function TimestampDetail({ row }: TimestampDetailProps): ReactNode {
+  const { state, orders, conversions, traderData, algorithmLogs, sandboxLogs } = row;
   const algorithm = useStore(state => state.algorithm)!;
 
   const profitLoss = algorithm.activityLogs
@@ -65,6 +65,10 @@ export function TimestampDetail({
       <Grid.Col span={{ xs: 12, sm: 4 }}>
         <Title order={5}>Orders</Title>
         {<OrdersTable orders={orders} />}
+      </Grid.Col>
+      <Grid.Col span={12}>
+        <Title order={5}>Order lifecycle</Title>
+        <OrderLifecycleTable algorithm={algorithm} row={row} />
       </Grid.Col>
       <Grid.Col span={{ xs: 12, sm: 4 }}>
         <Title order={5}>Plain value observations</Title>
