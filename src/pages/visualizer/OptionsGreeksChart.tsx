@@ -142,6 +142,7 @@ export function OptionsGreeksChart({ vevSymbols, underlyingSymbol, defaultSymbol
   return (
     <Chart
       title={`Greeks — ${selectedSymbol} (Delta on axis, others in tooltip)`}
+      options={{ yAxis: { title: { text: 'Delta' } } }}
       series={series}
       min={0}
       max={1}

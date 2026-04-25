@@ -125,5 +125,12 @@ export function OptionsIVChart({ vevSymbols, underlyingSymbol, selectedSymbols }
     </Group>
   );
 
-  return <Chart title="Implied Volatility (annualised)" series={series} controls={controls} />;
+  return (
+    <Chart
+      title="Implied Volatility (annualised)"
+      options={{ yAxis: { title: { text: 'Implied Volatility (%)' } } }}
+      series={series}
+      controls={controls}
+    />
+  );
 }

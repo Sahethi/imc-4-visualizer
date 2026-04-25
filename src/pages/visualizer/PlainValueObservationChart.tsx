@@ -5,30 +5,40 @@ import { useStore } from '../../store.ts';
 import { Chart } from './Chart.tsx';
 
 export interface PlainValueObservationChartProps {
-  symbol: ProsperitySymbol;
+  symbol?: ProsperitySymbol;
+  symbols?: ProsperitySymbol[];
 }
 
-export function PlainValueObservationChart({ symbol }: PlainValueObservationChartProps): ReactNode {
+export function PlainValueObservationChart({ symbol, symbols }: PlainValueObservationChartProps): ReactNode {
   const algorithm = useStore(state => state.algorithm)!;
+  const activeSymbols = [...new Set(symbols?.length ? symbols : symbol ? [symbol] : [])];
 
-  const values = [];
+  const series: Highcharts.SeriesOptionsType[] = activeSymbols.map((activeSymbol, index) => {
+    const values: [number, number][] = [];
 
-  for (const row of algorithm.data) {
-    const observation = row.state.observations.plainValueObservations[symbol];
-    if (observation === undefined) {
-      continue;
+    for (const row of algorithm.data) {
+      const observation = row.state.observations.plainValueObservations[activeSymbol];
+      if (observation === undefined) {
+        continue;
+      }
+
+      values.push([row.state.timestamp, observation]);
     }
 
-    values.push([row.state.timestamp, observation]);
-  }
+    return { type: 'line', name: activeSymbol, colorIndex: index, data: values };
+  });
 
   const options: Highcharts.Options = {
     yAxis: {
+      title: { text: 'Value' },
       allowDecimals: true,
     },
   };
 
-  const series: Highcharts.SeriesOptionsType[] = [{ type: 'line', name: 'Value', data: values }];
+  const title =
+    activeSymbols.length > 1
+      ? 'Plain value observation overlay'
+      : `${activeSymbols[0] ?? symbol ?? 'Symbol'} - Plain value observation`;
 
-  return <Chart title={`${symbol} - Plain value observation`} options={options} series={series} />;
+  return <Chart title={title} options={options} series={series} />;
 }

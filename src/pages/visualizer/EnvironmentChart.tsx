@@ -30,7 +30,7 @@ export function EnvironmentChart({ symbol }: EnvironmentChartProps): ReactNode {
   ];
 
   const options: Highcharts.Options = {
-    yAxis: [{}, { opposite: true }],
+    yAxis: [{ title: { text: 'Sunlight' } }, { title: { text: 'Humidity' }, opposite: true }],
   };
 
   return <Chart title={`${symbol} - Environment`} options={options} series={series} />;

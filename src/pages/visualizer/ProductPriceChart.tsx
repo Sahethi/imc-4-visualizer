@@ -533,6 +533,7 @@ export function ProductPriceChart({ symbol }: ProductPriceChartProps): ReactNode
   return (
     <Chart
       title={`${symbol} - Price`}
+      options={{ yAxis: { title: { text: 'Price' } } }}
       series={series}
       controls={controls}
     />

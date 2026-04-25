@@ -222,15 +222,25 @@ function makeCell(
         symbols: overrides.symbols?.length ? overrides.symbols : context.vevSymbols,
       };
     case 'optionsGreeks':
-    case 'volume':
     case 'spread':
-    case 'conversionPrice':
-    case 'transport':
     case 'environment':
-    case 'plainValueObservation':
       return {
         ...base,
         symbol: overrides.symbol ?? overrides.symbols?.[0] ?? context.firstSymbol ?? undefined,
+      };
+    case 'volume':
+    case 'conversionPrice':
+    case 'transport':
+    case 'plainValueObservation':
+      return {
+        ...base,
+        symbols: overrides.symbols?.length
+          ? overrides.symbols
+          : overrides.symbol
+            ? [overrides.symbol]
+            : context.firstSymbol
+              ? [context.firstSymbol]
+              : [],
       };
     case 'orderDepthTable':
       return {
@@ -390,32 +400,35 @@ function DashboardCellEditor({
         {(cell.kind === 'profitLoss' ||
           cell.kind === 'position' ||
           cell.kind === 'productPrice' ||
+          cell.kind === 'volume' ||
+          cell.kind === 'conversionPrice' ||
+          cell.kind === 'transport' ||
+          cell.kind === 'plainValueObservation' ||
           cell.kind === 'optionsAnalysis' ||
           cell.kind === 'optionsIV') && (
           <MultiSelect
             label={cell.kind === 'optionsAnalysis' || cell.kind === 'optionsIV' ? 'Vouchers' : 'Symbols'}
-            data={cell.kind === 'optionsAnalysis' || cell.kind === 'optionsIV' ? vevSymbolOptions : symbolOptions}
+            data={
+              cell.kind === 'optionsAnalysis' || cell.kind === 'optionsIV'
+                ? vevSymbolOptions
+                : cell.kind === 'conversionPrice' || cell.kind === 'transport'
+                  ? conversionSymbolOptions
+                  : cell.kind === 'plainValueObservation'
+                    ? plainValueSymbolOptions.length > 0
+                      ? plainValueSymbolOptions
+                      : symbolOptions
+                    : symbolOptions
+            }
             value={cell.symbols ?? (cell.symbol ? [cell.symbol] : [])}
             onChange={value => onChange({ ...cell, symbols: value, symbol: value[0] ?? undefined })}
             searchable
           />
         )}
 
-        {(cell.kind === 'volume' ||
-          cell.kind === 'spread' ||
-          cell.kind === 'conversionPrice' ||
-          cell.kind === 'transport' ||
-          cell.kind === 'environment' ||
-          cell.kind === 'plainValueObservation') && (
+        {(cell.kind === 'spread' || cell.kind === 'environment') && (
           <Select
             label="Symbol"
-            data={
-              cell.kind === 'conversionPrice' || cell.kind === 'transport' || cell.kind === 'environment'
-                ? conversionSymbolOptions
-                : plainValueSymbolOptions.length > 0 && cell.kind === 'plainValueObservation'
-                  ? plainValueSymbolOptions
-                  : symbolOptions
-            }
+            data={cell.kind === 'environment' ? conversionSymbolOptions : symbolOptions}
             value={cell.symbol ?? context.firstSymbol ?? ''}
             onChange={value => onChange({ ...cell, symbol: value ?? undefined })}
             searchable
@@ -509,8 +522,10 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
         </VisualizerCard>
       );
     case 'volume':
-      return cell.symbol ? (
-        <VolumeChart symbol={cell.symbol} />
+      return (cell.symbols?.length ?? 0) > 1 ? (
+        <VolumeChart symbols={cell.symbols!} />
+      ) : cell.symbols?.length === 1 || cell.symbol ? (
+        <VolumeChart symbol={cell.symbols?.[0] ?? cell.symbol!} />
       ) : (
         <VisualizerCard>
           <Text c="dimmed">Select a symbol.</Text>
@@ -525,16 +540,20 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
         </VisualizerCard>
       );
     case 'conversionPrice':
-      return cell.symbol ? (
-        <ConversionPriceChart symbol={cell.symbol} />
+      return (cell.symbols?.length ?? 0) > 1 ? (
+        <ConversionPriceChart symbols={cell.symbols!} />
+      ) : cell.symbols?.length === 1 || cell.symbol ? (
+        <ConversionPriceChart symbol={cell.symbols?.[0] ?? cell.symbol!} />
       ) : (
         <VisualizerCard>
           <Text c="dimmed">Select a symbol.</Text>
         </VisualizerCard>
       );
     case 'transport':
-      return cell.symbol ? (
-        <TransportChart symbol={cell.symbol} />
+      return (cell.symbols?.length ?? 0) > 1 ? (
+        <TransportChart symbols={cell.symbols!} />
+      ) : cell.symbols?.length === 1 || cell.symbol ? (
+        <TransportChart symbol={cell.symbols?.[0] ?? cell.symbol!} />
       ) : (
         <VisualizerCard>
           <Text c="dimmed">Select a symbol.</Text>
@@ -549,8 +568,10 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
         </VisualizerCard>
       );
     case 'plainValueObservation':
-      return cell.symbol ? (
-        <PlainValueObservationChart symbol={cell.symbol} />
+      return (cell.symbols?.length ?? 0) > 1 ? (
+        <PlainValueObservationChart symbols={cell.symbols!} />
+      ) : cell.symbols?.length === 1 || cell.symbol ? (
+        <PlainValueObservationChart symbol={cell.symbols?.[0] ?? cell.symbol!} />
       ) : (
         <VisualizerCard>
           <Text c="dimmed">Select a symbol.</Text>
