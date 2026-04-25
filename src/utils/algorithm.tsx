@@ -238,7 +238,15 @@ function decompressDataRow(compressed: CompressedAlgorithmDataRow, sandboxLogs: 
 }
 
 function decompressStructuredLogEntry(entry: StructuredLogEntry): AlgorithmDataRow {
-  return decompressDataRow(JSON.parse(entry.lambdaLog), entry.sandboxLog.trim());
+  try {
+    return decompressDataRow(JSON.parse(entry.lambdaLog), entry.sandboxLog.trim());
+  } catch {
+    throw new AlgorithmParseError(
+      <Text size="sm">
+        Structured log file is malformed or truncated. Please re-download the log file and try again.
+      </Text>,
+    );
+  }
 }
 
 function getAlgorithmData(logLines: string[]): AlgorithmDataRow[] {
@@ -260,7 +268,17 @@ function getAlgorithmData(logLines: string[]): AlgorithmDataRow[] {
     }
 
     if (line.startsWith(sandboxLogPrefix)) {
-      nextSandboxLogs = JSON.parse(line.substring(sandboxLogPrefix.length, line.length - 1)).trim();
+      try {
+        nextSandboxLogs = JSON.parse(line.substring(sandboxLogPrefix.length, line.length - 1)).trim();
+      } catch {
+        throw new AlgorithmParseError(
+          /* prettier-ignore */
+          <>
+            <Text size="sm">Logs are in invalid format, please see the prerequisites section above. Could not parse the following line:</Text>
+            <Text size="sm">{line}</Text>
+          </>,
+        );
+      }
       continue;
     }
 
@@ -292,7 +310,7 @@ function getAlgorithmData(logLines: string[]): AlgorithmDataRow[] {
 }
 
 function getAlgorithmDataFromStructuredFile(logs: StructuredLogFile): AlgorithmDataRow[] {
-  return logs.logs.map(decompressStructuredLogEntry);
+  return logs.logs.filter(entry => entry.lambdaLog.trim() !== '').map(decompressStructuredLogEntry);
 }
 
 function parseStructuredLogFile(logs: string, summary?: AlgorithmSummary): Algorithm | null {
@@ -331,8 +349,8 @@ export function parseAlgorithmLogs(logs: string, summary?: AlgorithmSummary): Al
       throw new AlgorithmParseError('Structured log file is empty.');
     }
 
-    if (structuredLogs.activityLogs.length === 0 || structuredLogs.data.length === 0) {
-      throw new AlgorithmParseError('Structured log file is missing activity or algorithm data.');
+    if (structuredLogs.activityLogs.length === 0) {
+      throw new AlgorithmParseError('Structured log file is missing activity data.');
     }
 
     return structuredLogs;

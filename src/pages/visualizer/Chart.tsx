@@ -6,7 +6,9 @@ import HighchartsOfflineExporting from 'highcharts/modules/offline-exporting';
 import HighchartsHighContrastDarkTheme from 'highcharts/themes/high-contrast-dark';
 import HighchartsReact from 'highcharts-react-official';
 import merge from 'lodash/merge';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Box } from '@mantine/core';
 import { useActualColorScheme } from '../../hooks/use-actual-color-scheme.ts';
 import { formatNumber } from '../../utils/format.ts';
 import { VisualizerCard } from './VisualizerCard.tsx';
@@ -55,10 +57,37 @@ interface ChartProps {
   series: Highcharts.SeriesOptionsType[];
   min?: number;
   max?: number;
+  controls?: ReactNode;
+  tooltipHeaderFormatter?: (x: number) => string;
 }
 
-export function Chart({ title, options, series, min, max }: ChartProps): ReactNode {
+export function Chart({ title, options, series, min, max, controls, tooltipHeaderFormatter }: ChartProps): ReactNode {
   const colorScheme = useActualColorScheme();
+  const chartRef = useRef<HighchartsReact.RefObject>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const tooltipHeaderFormatterRef = useRef(tooltipHeaderFormatter);
+  useEffect(() => {
+    tooltipHeaderFormatterRef.current = tooltipHeaderFormatter;
+  }, [tooltipHeaderFormatter]);
+
+  useEffect(() => {
+    const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFSChange);
+    return () => document.removeEventListener('fullscreenchange', onFSChange);
+  }, []);
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const stop = (e: Event) => e.stopPropagation();
+    el.addEventListener('mousedown', stop, true);
+    el.addEventListener('pointerdown', stop, true);
+    return () => {
+      el.removeEventListener('mousedown', stop, true);
+      el.removeEventListener('pointerdown', stop, true);
+    };
+  }, [isFullscreen]);
 
   const fullOptions = useMemo((): Highcharts.Options => {
     const themeOptions = colorScheme === 'light' ? {} : getThemeOptions(HighchartsHighContrastDarkTheme);
@@ -66,7 +95,8 @@ export function Chart({ title, options, series, min, max }: ChartProps): ReactNo
     const chartOptions: Highcharts.Options = {
       chart: {
         animation: false,
-        height: 400,
+        height: isFullscreen ? undefined : 550,
+        marginBottom: isFullscreen ? undefined : 110,
         zooming: {
           type: 'x',
         },
@@ -83,18 +113,27 @@ export function Chart({ title, options, series, min, max }: ChartProps): ReactNo
                 return true;
               }
 
-              let timestamp = e.labelConfig.point.x;
+              let x = e.labelConfig.point.x;
 
               if (e.labelConfig.point.dataGroup) {
                 const xData = e.labelConfig.series.xData;
                 const lastTimestamp = xData[xData.length - 1];
-                if (timestamp + 100 * e.labelConfig.point.dataGroup.length >= lastTimestamp) {
-                  timestamp = lastTimestamp;
+                if (x + 100 * e.labelConfig.point.dataGroup.length >= lastTimestamp) {
+                  x = lastTimestamp;
                 }
               }
 
-              e.text = `Timestamp ${formatNumber(timestamp)}<br/>`;
+              const fmt = tooltipHeaderFormatterRef.current;
+              e.text = fmt ? fmt(x) : `Timestamp ${formatNumber(x)}<br/>`;
               return false;
+            });
+
+            const chart = this;
+            Highcharts.addEvent(chart, 'fullscreenOpen', function () {
+              chart.update({ tooltip: { outside: false } }, false);
+            });
+            Highcharts.addEvent(chart, 'fullscreenClose', function () {
+              chart.update({ tooltip: { outside: true } }, false);
             });
           },
         },
@@ -148,6 +187,10 @@ export function Chart({ title, options, series, min, max }: ChartProps): ReactNo
       },
       legend: {
         enabled: true,
+        verticalAlign: 'bottom',
+        layout: 'horizontal',
+        align: 'center',
+        margin: 8,
       },
       rangeSelector: {
         enabled: false,
@@ -163,11 +206,33 @@ export function Chart({ title, options, series, min, max }: ChartProps): ReactNo
     };
 
     return merge(themeOptions, chartOptions);
-  }, [colorScheme, title, options, series, min, max]);
+  }, [colorScheme, title, options, series, min, max, isFullscreen]);
+
+  const controlsPortalTarget = chartRef.current?.container.current ?? null;
 
   return (
     <VisualizerCard p={0}>
-      <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={fullOptions} immutable />
+      {controls && !isFullscreen && <Box px="md" pt="sm">{controls}</Box>}
+      <HighchartsReact ref={chartRef} highcharts={Highcharts} constructorType={'stockChart'} options={fullOptions} />
+      {controls && isFullscreen && controlsPortalTarget && createPortal(
+        <div
+          ref={overlayRef}
+          style={{
+            position: 'absolute',
+            top: 48,
+            left: 8,
+            zIndex: 9999,
+            pointerEvents: 'all',
+            background: 'var(--mantine-color-body)',
+            borderRadius: 'var(--mantine-radius-sm)',
+            border: '1px solid var(--mantine-color-default-border)',
+            padding: '4px 12px',
+          }}
+        >
+          {controls}
+        </div>,
+        controlsPortalTarget,
+      )}
     </VisualizerCard>
   );
 }

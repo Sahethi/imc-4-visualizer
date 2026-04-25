@@ -17,7 +17,8 @@ export function TimestampsCard(): ReactNode {
 
   const timestampMin = algorithm.data[0].state.timestamp;
   const timestampMax = algorithm.data[algorithm.data.length - 1].state.timestamp;
-  const timestampStep = algorithm.data[1].state.timestamp - algorithm.data[0].state.timestamp;
+  const timestampStep =
+    algorithm.data.length > 1 ? algorithm.data[1].state.timestamp - algorithm.data[0].state.timestamp : 100;
 
   const [timestamp, setTimestamp] = useState(timestampMin);
 

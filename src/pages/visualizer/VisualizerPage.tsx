@@ -1,10 +1,12 @@
-import { Center, Container, Grid, Title } from '@mantine/core';
+import { Alert, Center, Container, Grid, Title } from '@mantine/core';
+import { IconInfoCircle } from '@tabler/icons-react';
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../store.ts';
 import { formatNumber } from '../../utils/format.ts';
 import { AlgorithmSummaryCard } from './AlgorithmSummaryCard.tsx';
 import { ConversionPriceChart } from './ConversionPriceChart.tsx';
+import { OptionsAnalysisChart } from './OptionsAnalysisChart.tsx';
 import { EnvironmentChart } from './EnvironmentChart.tsx';
 import { PlainValueObservationChart } from './PlainValueObservationChart.tsx';
 import { PositionChart } from './PositionChart.tsx';
@@ -18,6 +20,7 @@ import { VolumeChart } from './VolumeChart.tsx';
 
 export function VisualizerPage(): ReactNode {
   const algorithm = useStore(state => state.algorithm);
+  const hasAlgorithmData = (algorithm?.data.length ?? 0) > 0;
 
   const { search } = useLocation();
 
@@ -41,6 +44,10 @@ export function VisualizerPage(): ReactNode {
   const symbols = new Set<string>();
   const plainValueObservationSymbols = new Set<string>();
 
+  for (const row of algorithm.activityLogs) {
+    symbols.add(row.product);
+  }
+
   for (let i = 0; i < algorithm.data.length; i += 1000) {
     const row = algorithm.data[i];
 
@@ -54,6 +61,8 @@ export function VisualizerPage(): ReactNode {
   }
 
   const sortedSymbols = [...symbols].sort((a, b) => a.localeCompare(b));
+  const vevSymbols = sortedSymbols.filter(s => /^VEV_\d+$/.test(s));
+  const underlyingSymbol = 'VELVETFRUIT_EXTRACT';
   const sortedPlainValueObservationSymbols = [...plainValueObservationSymbols].sort((a, b) => a.localeCompare(b));
 
   const symbolColumns: ReactNode[] = [];
@@ -119,6 +128,14 @@ export function VisualizerPage(): ReactNode {
             </Center>
           </VisualizerCard>
         </Grid.Col>
+        {!hasAlgorithmData && (
+          <Grid.Col span={12}>
+            <Alert icon={<IconInfoCircle size={16} />} title="Limited mode" color="yellow" variant="light">
+              This file does not include lambda logs. Activity-based charts are available, while timestamp drill-down
+              and order-level state are disabled.
+            </Alert>
+          </Grid.Col>
+        )}
         <Grid.Col span={{ xs: 12, sm: 6 }}>
           <ProfitLossChart symbols={sortedSymbols} />
         </Grid.Col>
@@ -126,9 +143,31 @@ export function VisualizerPage(): ReactNode {
           <PositionChart symbols={sortedSymbols} />
         </Grid.Col>
         {symbolColumns}
-        <Grid.Col span={12}>
-          <TimestampsCard />
-        </Grid.Col>
+        {vevSymbols.length > 0 && symbols.has(underlyingSymbol) && (
+          <>
+            <Grid.Col span={{ xs: 12, sm: 6 }}>
+              <OptionsAnalysisChart
+                vevSymbols={vevSymbols}
+                underlyingSymbol={underlyingSymbol}
+                defaultXAxis="timestamp"
+                defaultYAxis="iv"
+              />
+            </Grid.Col>
+            <Grid.Col span={{ xs: 12, sm: 6 }}>
+              <OptionsAnalysisChart
+                vevSymbols={vevSymbols}
+                underlyingSymbol={underlyingSymbol}
+                defaultXAxis="moneyness"
+                defaultYAxis="iv"
+              />
+            </Grid.Col>
+          </>
+        )}
+        {hasAlgorithmData && (
+          <Grid.Col span={12}>
+            <TimestampsCard />
+          </Grid.Col>
+        )}
         {algorithm.summary && (
           <Grid.Col span={12}>
             <AlgorithmSummaryCard />

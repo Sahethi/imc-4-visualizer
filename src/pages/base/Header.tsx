@@ -55,7 +55,7 @@ export function Header(): ReactNode {
       <Container size="md" className={classes.inner}>
         <Text size="xl" fw={700}>
           <IconEye size={30} className={classes.icon} />
-          IMC Prosperity 2 Visualizer
+          Sahethi's IMC Prosperity 4
         </Text>
 
         <Group gap={5}>{links}</Group>
