@@ -96,7 +96,8 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
       chart: {
         animation: false,
         height: isFullscreen ? undefined : 550,
-        marginBottom: isFullscreen ? undefined : 110,
+        marginBottom: isFullscreen ? undefined : 145,
+        spacingBottom: isFullscreen ? undefined : 16,
         zooming: {
           type: 'x',
         },
@@ -166,6 +167,7 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
         type: 'datetime',
         title: {
           text: 'Timestamp',
+          margin: 14,
         },
         crosshair: {
           width: 1,
@@ -190,7 +192,8 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
         verticalAlign: 'bottom',
         layout: 'horizontal',
         align: 'center',
-        margin: 8,
+        margin: 14,
+        y: -4,
       },
       rangeSelector: {
         enabled: false,
@@ -212,27 +215,34 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
 
   return (
     <VisualizerCard p={0}>
-      {controls && !isFullscreen && <Box px="md" pt="sm">{controls}</Box>}
-      <HighchartsReact ref={chartRef} highcharts={Highcharts} constructorType={'stockChart'} options={fullOptions} />
-      {controls && isFullscreen && controlsPortalTarget && createPortal(
-        <div
-          ref={overlayRef}
-          style={{
-            position: 'absolute',
-            top: 48,
-            left: 8,
-            zIndex: 9999,
-            pointerEvents: 'all',
-            background: 'var(--mantine-color-body)',
-            borderRadius: 'var(--mantine-radius-sm)',
-            border: '1px solid var(--mantine-color-default-border)',
-            padding: '4px 12px',
-          }}
-        >
+      {controls && !isFullscreen && (
+        <Box px="md" pt="sm">
           {controls}
-        </div>,
-        controlsPortalTarget,
+        </Box>
       )}
+      <HighchartsReact ref={chartRef} highcharts={Highcharts} constructorType={'stockChart'} options={fullOptions} />
+      {controls &&
+        isFullscreen &&
+        controlsPortalTarget &&
+        createPortal(
+          <div
+            ref={overlayRef}
+            style={{
+              position: 'absolute',
+              top: 48,
+              left: 8,
+              zIndex: 9999,
+              pointerEvents: 'all',
+              background: 'var(--mantine-color-body)',
+              borderRadius: 'var(--mantine-radius-sm)',
+              border: '1px solid var(--mantine-color-default-border)',
+              padding: '4px 12px',
+            }}
+          >
+            {controls}
+          </div>,
+          controlsPortalTarget,
+        )}
     </VisualizerCard>
   );
 }

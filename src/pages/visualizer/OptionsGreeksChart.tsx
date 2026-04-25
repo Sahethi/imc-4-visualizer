@@ -1,6 +1,6 @@
 import Highcharts from 'highcharts';
 import { Group, NumberInput, Select, Text } from '@mantine/core';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { ProsperitySymbol } from '../../models.ts';
 import { useStore } from '../../store.ts';
 import { bsGreeks, impliedVol } from '../../utils/blackScholes.ts';
@@ -9,12 +9,17 @@ import { Chart } from './Chart.tsx';
 interface Props {
   vevSymbols: ProsperitySymbol[];
   underlyingSymbol: ProsperitySymbol;
+  defaultSymbol?: ProsperitySymbol;
 }
 
-export function OptionsGreeksChart({ vevSymbols, underlyingSymbol }: Props): ReactNode {
+export function OptionsGreeksChart({ vevSymbols, underlyingSymbol, defaultSymbol }: Props): ReactNode {
   const algorithm = useStore(state => state.algorithm)!;
   const [round, setRound] = useState(3);
-  const [selectedSymbol, setSelectedSymbol] = useState(vevSymbols[0] ?? '');
+  const [selectedSymbol, setSelectedSymbol] = useState(defaultSymbol ?? vevSymbols[0] ?? '');
+
+  useEffect(() => {
+    setSelectedSymbol(defaultSymbol ?? vevSymbols[0] ?? '');
+  }, [defaultSymbol, vevSymbols]);
 
   const strike = parseInt(selectedSymbol.replace(/^VEV_/, ''), 10);
 
@@ -118,13 +123,7 @@ export function OptionsGreeksChart({ vevSymbols, underlyingSymbol }: Props): Rea
     <Group gap="md" wrap="nowrap">
       <Group gap={4} wrap="nowrap">
         <Text size="sm">Voucher</Text>
-        <Select
-          data={vevSymbols}
-          value={selectedSymbol}
-          onChange={v => v && setSelectedSymbol(v)}
-          size="xs"
-          w={130}
-        />
+        <Select data={vevSymbols} value={selectedSymbol} onChange={v => v && setSelectedSymbol(v)} size="xs" w={130} />
       </Group>
       <Group gap={4} wrap="nowrap">
         <Text size="sm">Round</Text>

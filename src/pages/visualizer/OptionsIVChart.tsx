@@ -9,6 +9,7 @@ import { Chart } from './Chart.tsx';
 interface Props {
   vevSymbols: ProsperitySymbol[];
   underlyingSymbol: ProsperitySymbol;
+  selectedSymbols?: ProsperitySymbol[];
 }
 
 interface IVPoint {
@@ -36,9 +37,11 @@ const COLORS = [
   '#a78bfa',
 ];
 
-export function OptionsIVChart({ vevSymbols, underlyingSymbol }: Props): ReactNode {
+export function OptionsIVChart({ vevSymbols, underlyingSymbol, selectedSymbols }: Props): ReactNode {
   const algorithm = useStore(state => state.algorithm)!;
   const [round, setRound] = useState(3);
+
+  const activeSymbols = selectedSymbols?.length ? selectedSymbols : vevSymbols;
 
   // Build underlying price map: timestamp -> midPrice
   const underlyingPrice = new Map<number, number>();
@@ -48,7 +51,7 @@ export function OptionsIVChart({ vevSymbols, underlyingSymbol }: Props): ReactNo
     }
   }
 
-  const series: Highcharts.SeriesOptionsType[] = vevSymbols.map((symbol, idx) => {
+  const series: Highcharts.SeriesOptionsType[] = activeSymbols.map((symbol, idx) => {
     const strike = parseInt(symbol.replace(/^VEV_/, ''), 10);
     const data: IVPoint[] = [];
 
