@@ -37,11 +37,15 @@ const COLORS = [
   '#a78bfa',
 ];
 
+function normalizeVevSymbols(symbols: Array<ProsperitySymbol | undefined | null>): ProsperitySymbol[] {
+  return symbols.filter((symbol): symbol is ProsperitySymbol => typeof symbol === 'string' && /^VEV_\d+$/.test(symbol));
+}
+
 export function OptionsIVChart({ vevSymbols, underlyingSymbol, selectedSymbols }: Props): ReactNode {
   const algorithm = useStore(state => state.algorithm)!;
   const [round, setRound] = useState(3);
 
-  const activeSymbols = selectedSymbols?.length ? selectedSymbols : vevSymbols;
+  const activeSymbols = normalizeVevSymbols(selectedSymbols?.length ? selectedSymbols : vevSymbols);
 
   // Build underlying price map: timestamp -> midPrice
   const underlyingPrice = new Map<number, number>();
@@ -124,6 +128,10 @@ export function OptionsIVChart({ vevSymbols, underlyingSymbol, selectedSymbols }
       />
     </Group>
   );
+
+  if (activeSymbols.length === 0) {
+    return <Chart title="Implied Volatility (annualised)" series={[]} controls={controls} />;
+  }
 
   return (
     <Chart

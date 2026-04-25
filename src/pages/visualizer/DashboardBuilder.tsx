@@ -420,7 +420,7 @@ function DashboardCellEditor({
                     : symbolOptions
             }
             value={cell.symbols ?? (cell.symbol ? [cell.symbol] : [])}
-            onChange={value => onChange({ ...cell, symbols: value, symbol: value[0] ?? undefined })}
+            onChange={value => onChange({ ...cell, symbols: value.filter(Boolean), symbol: value[0] ?? undefined })}
             searchable
           />
         )}
@@ -582,7 +582,7 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
         <OptionsAnalysisChart
           vevSymbols={context.vevSymbols}
           underlyingSymbol={context.underlyingSymbol}
-          defaultSymbols={cell.symbols?.length ? cell.symbols : context.vevSymbols}
+          defaultSymbols={cell.symbols?.length ? cell.symbols.filter(Boolean) : context.vevSymbols}
         />
       );
     case 'optionsIV':
@@ -590,7 +590,7 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
         <OptionsIVChart
           vevSymbols={context.vevSymbols}
           underlyingSymbol={context.underlyingSymbol}
-          selectedSymbols={cell.symbols?.length ? cell.symbols : context.vevSymbols}
+          selectedSymbols={cell.symbols?.length ? cell.symbols.filter(Boolean) : context.vevSymbols}
         />
       );
     case 'optionsGreeks':

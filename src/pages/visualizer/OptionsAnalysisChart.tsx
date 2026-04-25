@@ -36,6 +36,10 @@ const COLORS = [
 const PRIMARY_AXIS_COLOR = '#3b82f6';
 const SECONDARY_AXIS_COLOR = '#f97316';
 
+function normalizeVevSymbols(symbols: Array<ProsperitySymbol | undefined | null>): ProsperitySymbol[] {
+  return symbols.filter((symbol): symbol is ProsperitySymbol => typeof symbol === 'string' && /^VEV_\d+$/.test(symbol));
+}
+
 function lightenHexColor(hex: string, amount: number): string {
   const normalized = hex.replace('#', '');
   if (normalized.length !== 6) {
@@ -92,10 +96,10 @@ export function OptionsAnalysisChart({
   const [yAxis, setYAxis] = useState<YAxisType>(defaultYAxis);
   const [secondaryYAxis, setSecondaryYAxis] = useState<YAxisType | null>(defaultSecondaryYAxis);
   const [round, setRound] = useState(3);
-  const [activeSymbols, setActiveSymbols] = useState<string[]>(defaultSymbols?.length ? defaultSymbols : vevSymbols);
+  const [activeSymbols, setActiveSymbols] = useState<string[]>(normalizeVevSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols));
 
   useEffect(() => {
-    setActiveSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols);
+    setActiveSymbols(normalizeVevSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols));
   }, [defaultSymbols, vevSymbols]);
 
   useEffect(() => {
@@ -178,6 +182,10 @@ export function OptionsAnalysisChart({
 
     return seriesList;
   }, [algorithm.activityLogs, activeSymbols, vevSymbols, underlyingPrice, xAxis, yAxis, secondaryYAxis, round]);
+
+  if (activeSymbols.length === 0) {
+    return <Chart title="Options analysis" series={[]} />;
+  }
 
   const yAxisOptions: Highcharts.Options['yAxis'] =
     secondaryYAxis && secondaryYAxis !== yAxis
