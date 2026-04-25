@@ -32,6 +32,7 @@ import { PlainValueObservationsTable } from './PlainValueObservationsTable.tsx';
 import { PositionChart } from './PositionChart.tsx';
 import { PositionTable } from './PositionTable.tsx';
 import { ProductPriceChart } from './ProductPriceChart.tsx';
+import { ProductPriceOverlayChart } from './ProductPriceOverlayChart.tsx';
 import { ProfitLossChart } from './ProfitLossChart.tsx';
 import { ProfitLossTable } from './ProfitLossTable.tsx';
 import { SpreadChart } from './SpreadChart.tsx';
@@ -203,6 +204,17 @@ function makeCell(
         ...base,
         symbols: overrides.symbols?.length ? overrides.symbols : context.symbols,
       };
+    case 'productPrice':
+      return {
+        ...base,
+        symbols: overrides.symbols?.length
+          ? overrides.symbols
+          : overrides.symbol
+            ? [overrides.symbol]
+            : context.firstSymbol
+              ? [context.firstSymbol]
+              : [],
+      };
     case 'optionsAnalysis':
     case 'optionsIV':
       return {
@@ -210,7 +222,6 @@ function makeCell(
         symbols: overrides.symbols?.length ? overrides.symbols : context.vevSymbols,
       };
     case 'optionsGreeks':
-    case 'productPrice':
     case 'volume':
     case 'spread':
     case 'conversionPrice':
@@ -378,19 +389,19 @@ function DashboardCellEditor({
 
         {(cell.kind === 'profitLoss' ||
           cell.kind === 'position' ||
+          cell.kind === 'productPrice' ||
           cell.kind === 'optionsAnalysis' ||
           cell.kind === 'optionsIV') && (
           <MultiSelect
             label={cell.kind === 'optionsAnalysis' || cell.kind === 'optionsIV' ? 'Vouchers' : 'Symbols'}
             data={cell.kind === 'optionsAnalysis' || cell.kind === 'optionsIV' ? vevSymbolOptions : symbolOptions}
-            value={cell.symbols ?? []}
-            onChange={value => onChange({ ...cell, symbols: value })}
+            value={cell.symbols ?? (cell.symbol ? [cell.symbol] : [])}
+            onChange={value => onChange({ ...cell, symbols: value, symbol: value[0] ?? undefined })}
             searchable
           />
         )}
 
-        {(cell.kind === 'productPrice' ||
-          cell.kind === 'volume' ||
+        {(cell.kind === 'volume' ||
           cell.kind === 'spread' ||
           cell.kind === 'conversionPrice' ||
           cell.kind === 'transport' ||
@@ -488,8 +499,10 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
     case 'position':
       return <PositionChart symbols={cell.symbols?.length ? cell.symbols : context.symbols} />;
     case 'productPrice':
-      return cell.symbol ? (
-        <ProductPriceChart symbol={cell.symbol} />
+      return (cell.symbols?.length ?? 0) > 1 ? (
+        <ProductPriceOverlayChart symbols={cell.symbols!} />
+      ) : cell.symbols?.length === 1 || cell.symbol ? (
+        <ProductPriceChart symbol={cell.symbols?.[0] ?? cell.symbol!} />
       ) : (
         <VisualizerCard>
           <Text c="dimmed">Select a symbol.</Text>
