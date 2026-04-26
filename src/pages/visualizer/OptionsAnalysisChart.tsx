@@ -7,10 +7,20 @@ import { bsGreeks, impliedVol } from '../../utils/blackScholes.ts';
 import { Chart } from './Chart.tsx';
 
 type XAxisType = 'timestamp' | 'moneyness';
-type YAxisType = 'iv' | 'delta' | 'gamma' | 'vega' | 'theta' | 'midPrice' | 'bidPrice' | 'askPrice';
+type YAxisType =
+  | 'iv'
+  | 'realizedVol'
+  | 'delta'
+  | 'gamma'
+  | 'vega'
+  | 'theta'
+  | 'midPrice'
+  | 'bidPrice'
+  | 'askPrice';
 
 const Y_LABEL: Record<YAxisType, string> = {
   iv: 'Implied Volatility (ann. %)',
+  realizedVol: 'Realized Volatility (ann. %)',
   delta: 'Delta',
   gamma: 'Gamma',
   vega: 'Vega',
@@ -62,7 +72,14 @@ interface Props {
   defaultSymbols?: ProsperitySymbol[];
 }
 
-function getYValue(row: ActivityLogRow, S: number, strike: number, T: number, yAxis: YAxisType): number | null {
+function getYValue(
+  row: ActivityLogRow,
+  S: number,
+  strike: number,
+  T: number,
+  yAxis: YAxisType,
+  realizedVol: number | null,
+): number | null {
   switch (yAxis) {
     case 'midPrice':
       return row.midPrice;
@@ -70,6 +87,8 @@ function getYValue(row: ActivityLogRow, S: number, strike: number, T: number, yA
       return row.bidPrices[0] ?? null;
     case 'askPrice':
       return row.askPrices[0] ?? null;
+    case 'realizedVol':
+      return realizedVol;
     case 'iv': {
       const iv = impliedVol(row.midPrice, S, strike, T);
       return iv == null ? null : iv * Math.sqrt(365) * 100;
@@ -118,6 +137,40 @@ export function OptionsAnalysisChart({
     return map;
   }, [algorithm.activityLogs, underlyingSymbol]);
 
+  const realizedVolByTimestamp = useMemo(() => {
+    const map = new Map<number, number>();
+    const underlyingRows = algorithm.activityLogs
+      .filter(row => row.product === underlyingSymbol && row.midPrice > 0)
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    const rollingWindow = 20;
+    const scaledReturns: number[] = [];
+
+    for (let i = 1; i < underlyingRows.length; i++) {
+      const previous = underlyingRows[i - 1];
+      const current = underlyingRows[i];
+      if (previous.midPrice <= 0 || current.midPrice <= 0) {
+        continue;
+      }
+
+      const dtDays = Math.max((current.timestamp - previous.timestamp) / 100000, 1e-6);
+      const logReturn = Math.log(current.midPrice / previous.midPrice);
+      const varianceRate = (logReturn * logReturn) / dtDays;
+
+      scaledReturns.push(varianceRate);
+      if (scaledReturns.length > rollingWindow) {
+        scaledReturns.shift();
+      }
+
+      if (scaledReturns.length === rollingWindow) {
+        const meanVarianceRate = scaledReturns.reduce((sum, value) => sum + value, 0) / rollingWindow;
+        map.set(current.timestamp, Math.sqrt(meanVarianceRate * 365) * 100);
+      }
+    }
+
+    return map;
+  }, [algorithm.activityLogs, underlyingSymbol]);
+
   const series = useMemo((): Highcharts.SeriesOptionsType[] => {
     const seriesList: Highcharts.SeriesOptionsType[] = [];
 
@@ -138,15 +191,16 @@ export function OptionsAnalysisChart({
 
         // TTE: tteStart decreases by 1 per day; within a day it decreases by timestamp/100000
         const T = Math.max(8 - round - row.day - row.timestamp / 100000, 1e-4);
+        const realizedVol = realizedVolByTimestamp.get(row.timestamp) ?? null;
 
         const xVal = xAxis === 'moneyness' ? S / strike : row.timestamp;
-        const primary = getYValue(row, S, strike, T, yAxis);
+        const primary = getYValue(row, S, strike, T, yAxis, realizedVol);
         if (primary != null) {
           primaryData.push({ x: xVal, y: primary });
         }
 
         if (secondaryYAxis && secondaryYAxis !== yAxis) {
-          const secondary = getYValue(row, S, strike, T, secondaryYAxis);
+          const secondary = getYValue(row, S, strike, T, secondaryYAxis, realizedVol);
           if (secondary != null) {
             secondaryData.push({ x: xVal, y: secondary });
           }
@@ -185,7 +239,17 @@ export function OptionsAnalysisChart({
     }
 
     return seriesList;
-  }, [algorithm.activityLogs, activeSymbols, vevSymbols, underlyingPrice, xAxis, yAxis, secondaryYAxis, round]);
+  }, [
+    algorithm.activityLogs,
+    activeSymbols,
+    vevSymbols,
+    underlyingPrice,
+    realizedVolByTimestamp,
+    xAxis,
+    yAxis,
+    secondaryYAxis,
+    round,
+  ]);
 
   if (activeSymbols.length === 0) {
     return <Chart title="Options analysis" series={[]} />;
