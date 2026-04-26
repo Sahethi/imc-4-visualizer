@@ -25,7 +25,7 @@ export function PlainValueObservationChart({ symbol, symbols }: PlainValueObserv
       values.push([row.state.timestamp, observation]);
     }
 
-    return { type: 'line', name: activeSymbol, colorIndex: index, data: values };
+    return { type: 'line', name: activeSymbol, colorIndex: index, data: values, dataGrouping: { enabled: false } };
   });
 
   const options: Highcharts.Options = {

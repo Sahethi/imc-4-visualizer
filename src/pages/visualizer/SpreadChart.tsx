@@ -22,6 +22,7 @@ export function SpreadChart({ symbol }: SpreadChartProps): ReactNode {
       enableMouseTracking: false,
       data: [],
       yAxis: 0,
+      dataGrouping: { enabled: false },
     },
     {
       type: 'line',
@@ -31,6 +32,7 @@ export function SpreadChart({ symbol }: SpreadChartProps): ReactNode {
       marker: { enabled: false },
       data: [],
       yAxis: 0,
+      dataGrouping: { enabled: false },
     },
     {
       type: 'line',
@@ -40,6 +42,7 @@ export function SpreadChart({ symbol }: SpreadChartProps): ReactNode {
       marker: { enabled: false },
       data: [],
       yAxis: 0,
+      dataGrouping: { enabled: false },
     },
     {
       type: 'line',
@@ -50,6 +53,7 @@ export function SpreadChart({ symbol }: SpreadChartProps): ReactNode {
       data: [],
       yAxis: 1,
       dashStyle: 'ShortDash',
+      dataGrouping: { enabled: false },
     },
     {
       type: 'scatter',

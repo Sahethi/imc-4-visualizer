@@ -17,12 +17,12 @@ export function VolumeChart({ symbol, symbols }: VolumeChartProps): ReactNode {
 
   activeSymbols.forEach((activeSymbol, symbolIndex) => {
     const symbolSeries: Highcharts.SeriesOptionsType[] = [
-      { type: 'column', name: `${activeSymbol} Bid 3`, colorIndex: symbolIndex * 6 + 0, data: [] },
-      { type: 'column', name: `${activeSymbol} Bid 2`, colorIndex: symbolIndex * 6 + 1, data: [] },
-      { type: 'column', name: `${activeSymbol} Bid 1`, colorIndex: symbolIndex * 6 + 2, data: [] },
-      { type: 'column', name: `${activeSymbol} Ask 1`, colorIndex: symbolIndex * 6 + 3, data: [] },
-      { type: 'column', name: `${activeSymbol} Ask 2`, colorIndex: symbolIndex * 6 + 4, data: [] },
-      { type: 'column', name: `${activeSymbol} Ask 3`, colorIndex: symbolIndex * 6 + 5, data: [] },
+      { type: 'column', name: `${activeSymbol} Bid 3`, colorIndex: symbolIndex * 6 + 0, data: [], dataGrouping: { enabled: false } },
+      { type: 'column', name: `${activeSymbol} Bid 2`, colorIndex: symbolIndex * 6 + 1, data: [], dataGrouping: { enabled: false } },
+      { type: 'column', name: `${activeSymbol} Bid 1`, colorIndex: symbolIndex * 6 + 2, data: [], dataGrouping: { enabled: false } },
+      { type: 'column', name: `${activeSymbol} Ask 1`, colorIndex: symbolIndex * 6 + 3, data: [], dataGrouping: { enabled: false } },
+      { type: 'column', name: `${activeSymbol} Ask 2`, colorIndex: symbolIndex * 6 + 4, data: [], dataGrouping: { enabled: false } },
+      { type: 'column', name: `${activeSymbol} Ask 3`, colorIndex: symbolIndex * 6 + 5, data: [], dataGrouping: { enabled: false } },
     ];
 
     for (const row of algorithm.activityLogs) {

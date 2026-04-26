@@ -21,6 +21,7 @@ export function ProductPriceOverlayChart({ symbols }: ProductPriceOverlayChartPr
     data: algorithm.activityLogs
       .filter(row => row.product === symbol && row.midPrice !== 0)
       .map(row => [row.timestamp, row.midPrice]),
+    dataGrouping: { enabled: false },
   }));
 
   return (

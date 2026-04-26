@@ -24,6 +24,7 @@ export function ProfitLossChart({ symbols }: ProfitLossChartProps): ReactNode {
       type: 'line',
       name: 'Total',
       data: [...dataByTimestamp.keys()].map(timestamp => [timestamp, dataByTimestamp.get(timestamp)]),
+      dataGrouping: { enabled: false },
     },
   ];
 
@@ -41,6 +42,7 @@ export function ProfitLossChart({ symbols }: ProfitLossChartProps): ReactNode {
       name: symbol,
       data,
       dashStyle: 'Dash',
+      dataGrouping: { enabled: false },
     });
   });
 

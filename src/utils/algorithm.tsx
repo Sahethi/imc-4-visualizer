@@ -339,6 +339,7 @@ function parseStructuredLogFile(logs: string, summary?: AlgorithmSummary): Algor
     summary,
     activityLogs: getActivityLogsFromStructuredFile(structuredLogs),
     data: getAlgorithmDataFromStructuredFile(structuredLogs),
+    tradeHistory: Array.isArray(structuredLogs.tradeHistory) ? structuredLogs.tradeHistory : [],
   };
 }
 

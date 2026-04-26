@@ -25,8 +25,8 @@ export function EnvironmentChart({ symbol }: EnvironmentChartProps): ReactNode {
   }
 
   const series: Highcharts.SeriesOptionsType[] = [
-    { type: 'line', name: 'Sunlight', marker: { symbol: 'square' }, yAxis: 0, data: sunlightData },
-    { type: 'line', name: 'Humidity', marker: { symbol: 'circle' }, yAxis: 1, data: humidityData },
+    { type: 'line', name: 'Sunlight', marker: { symbol: 'square' }, yAxis: 0, data: sunlightData, dataGrouping: { enabled: false } },
+    { type: 'line', name: 'Humidity', marker: { symbol: 'circle' }, yAxis: 1, data: humidityData, dataGrouping: { enabled: false } },
   ];
 
   const options: Highcharts.Options = {

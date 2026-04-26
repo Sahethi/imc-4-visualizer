@@ -114,16 +114,7 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
                 return true;
               }
 
-              let x = e.labelConfig.point.x;
-
-              if (e.labelConfig.point.dataGroup) {
-                const xData = e.labelConfig.series.xData;
-                const lastTimestamp = xData[xData.length - 1];
-                if (x + 100 * e.labelConfig.point.dataGroup.length >= lastTimestamp) {
-                  x = lastTimestamp;
-                }
-              }
-
+              const x = e.labelConfig.point.x;
               const fmt = tooltipHeaderFormatterRef.current;
               e.text = fmt ? fmt(x) : `Timestamp ${formatNumber(x)}<br/>`;
               return false;
@@ -148,18 +139,7 @@ export function Chart({ title, options, series, min, max, controls, tooltipHeade
       plotOptions: {
         series: {
           dataGrouping: {
-            approximation(this: any, values: number[]): number {
-              const endIndex = this.dataGroupInfo.start + this.dataGroupInfo.length;
-              if (endIndex < this.xData.length) {
-                return values[0];
-              } else {
-                return values[values.length - 1];
-              }
-            },
-            anchor: 'start',
-            firstAnchor: 'firstPoint',
-            lastAnchor: 'lastPoint',
-            units: [['second', [1, 2, 5, 10]]],
+            enabled: false,
           },
         },
       },

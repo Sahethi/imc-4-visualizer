@@ -96,7 +96,9 @@ export function OptionsAnalysisChart({
   const [yAxis, setYAxis] = useState<YAxisType>(defaultYAxis);
   const [secondaryYAxis, setSecondaryYAxis] = useState<YAxisType | null>(defaultSecondaryYAxis);
   const [round, setRound] = useState(3);
-  const [activeSymbols, setActiveSymbols] = useState<string[]>(normalizeVevSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols));
+  const [activeSymbols, setActiveSymbols] = useState<string[]>(
+    normalizeVevSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols),
+  );
 
   useEffect(() => {
     setActiveSymbols(normalizeVevSymbols(defaultSymbols?.length ? defaultSymbols : vevSymbols));
@@ -120,8 +122,10 @@ export function OptionsAnalysisChart({
     const seriesList: Highcharts.SeriesOptionsType[] = [];
 
     for (const symbol of activeSymbols) {
-      const strike = parseInt(symbol.replace(/^VEV_/, ''), 10);
+      if (typeof symbol !== 'string') continue;
       const colorIdx = vevSymbols.indexOf(symbol);
+      if (colorIdx === -1) continue;
+      const strike = parseInt(symbol.replace(/^VEV_/, ''), 10);
       const color = COLORS[colorIdx % COLORS.length];
       const secondaryColor = lightenHexColor(color, 0.35);
       const primaryData: { x: number; y: number }[] = [];
@@ -162,7 +166,7 @@ export function OptionsAnalysisChart({
         lineWidth: xAxis === 'moneyness' ? 0 : 1,
         data: primaryData,
         yAxis: 0,
-        dataGrouping: { enabled: xAxis === 'timestamp' },
+        dataGrouping: { enabled: false },
       } as Highcharts.SeriesOptionsType);
 
       if (secondaryYAxis && secondaryYAxis !== yAxis) {
@@ -175,7 +179,7 @@ export function OptionsAnalysisChart({
           lineWidth: xAxis === 'moneyness' ? 0 : 1,
           data: secondaryData,
           yAxis: 1,
-          dataGrouping: { enabled: xAxis === 'timestamp' },
+          dataGrouping: { enabled: false },
         } as Highcharts.SeriesOptionsType);
       }
     }

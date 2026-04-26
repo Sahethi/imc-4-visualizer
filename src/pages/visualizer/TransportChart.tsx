@@ -32,13 +32,14 @@ export function TransportChart({ symbol, symbols }: TransportChartProps): ReactN
     }
 
     series.push(
-      { type: 'line', name: `${activeSymbol} Transport fees`, colorIndex: index * 3, data: transportFeesData },
+      { type: 'line', name: `${activeSymbol} Transport fees`, colorIndex: index * 3, data: transportFeesData, dataGrouping: { enabled: false } },
       {
         type: 'line',
         name: `${activeSymbol} Import tariff`,
         colorIndex: index * 3 + 1,
         marker: { symbol: 'triangle' },
         data: importTariffData,
+        dataGrouping: { enabled: false },
       },
       {
         type: 'line',
@@ -46,6 +47,7 @@ export function TransportChart({ symbol, symbols }: TransportChartProps): ReactN
         colorIndex: index * 3 + 2,
         marker: { symbol: 'triangle-down' },
         data: exportTariffData,
+        dataGrouping: { enabled: false },
       },
     );
   });

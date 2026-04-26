@@ -36,6 +36,7 @@ export function ConversionPriceChart({ symbol, symbols }: ConversionPriceChartPr
         colorIndex: index * 2,
         marker: { symbol: 'triangle' },
         data: bidPriceData,
+        dataGrouping: { enabled: false },
       },
       {
         type: 'line',
@@ -43,6 +44,7 @@ export function ConversionPriceChart({ symbol, symbols }: ConversionPriceChartPr
         colorIndex: index * 2 + 1,
         marker: { symbol: 'triangle-down' },
         data: askPriceData,
+        dataGrouping: { enabled: false },
       },
     );
   });
