@@ -68,12 +68,11 @@ export function LoadFromFile(): ReactNode {
             }
           }
 
-          if (hasAlgorithm) {
+          if (hasAlgorithm || hasPython) {
+            if (!hasAlgorithm && useStore.getState().algorithm === null) {
+              setAlgorithm({ activityLogs: [], data: [] });
+            }
             navigate('/visualizer');
-          } else if (hasPython) {
-            setTimeout(() => {
-              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }, 50);
           }
 
           resolve();

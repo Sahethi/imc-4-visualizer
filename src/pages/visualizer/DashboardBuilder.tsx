@@ -302,6 +302,11 @@ function makeRow(
 }
 
 function buildDefaultRows(context: DashboardContext): DashboardRowConfig[] {
+  const hasNoMarketData = context.symbols.length === 0 && context.timestamps.length === 0;
+  if (hasNoMarketData) {
+    return [makeRow(context, 'algorithmCode', 'blank')];
+  }
+
   return [
     makeRow(context, 'profitLoss', 'position'),
     makeRow(context, 'productPrice', 'spread'),
