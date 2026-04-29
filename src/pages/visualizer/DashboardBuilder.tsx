@@ -5,12 +5,15 @@ import {
   Grid,
   Group,
   MultiSelect,
+  NumberInput,
   Paper,
   Select,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
+import { ScrollableCodeHighlight } from '../../components/ScrollableCodeHighlight.tsx';
+import { DerivedPriceChart, DerivedTerm } from './DerivedPriceChart.tsx';
 import { IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react';
 import { ReactNode, useMemo, useState } from 'react';
 import { Algorithm, AlgorithmDataRow } from '../../models.ts';
@@ -45,6 +48,8 @@ import { VisualizerCard } from './VisualizerCard.tsx';
 
 type DashboardViewType =
   | 'blank'
+  | 'algorithmCode'
+  | 'derivedPrice'
   | 'profitLoss'
   | 'position'
   | 'productPrice'
@@ -77,6 +82,7 @@ interface DashboardCellConfig {
   symbol?: string;
   symbols?: string[];
   timestamp?: number;
+  terms?: DerivedTerm[];
 }
 
 interface DashboardRowConfig {
@@ -102,6 +108,8 @@ interface DashboardContext {
 
 const VIEW_OPTIONS: Array<{ value: DashboardViewType; label: string }> = [
   { value: 'blank', label: 'Empty' },
+  { value: 'algorithmCode', label: 'Algorithm source (.py)' },
+  { value: 'derivedPrice', label: 'Derived price (math operations)' },
   { value: 'profitLoss', label: 'Profit / Loss chart' },
   { value: 'position', label: 'Positions chart' },
   { value: 'productPrice', label: 'Price vs time' },
@@ -241,6 +249,20 @@ function makeCell(
             : context.firstSymbol
               ? [context.firstSymbol]
               : [],
+      };
+    case 'derivedPrice':
+      return {
+        ...base,
+        terms: overrides.terms ?? (
+          context.symbols.length >= 2
+            ? [
+                { coefficient: 1, symbol: context.symbols[0] },
+                { coefficient: -1, symbol: context.symbols[1] },
+              ]
+            : context.symbols.length === 1
+              ? [{ coefficient: 1, symbol: context.symbols[0] }]
+              : []
+        ),
       };
     case 'orderDepthTable':
       return {
@@ -445,6 +467,68 @@ function DashboardCellEditor({
           />
         )}
 
+        {cell.kind === 'derivedPrice' && (
+          <Stack gap="xs">
+            <Text size="sm" fw={500}>Terms</Text>
+            {(cell.terms ?? []).map((term, i) => (
+              <Group key={i} gap="xs" wrap="nowrap" align="flex-end">
+                <NumberInput
+                  label={i === 0 ? 'Coeff' : undefined}
+                  value={term.coefficient}
+                  onChange={v => {
+                    const next = [...(cell.terms ?? [])];
+                    next[i] = { ...next[i], coefficient: typeof v === 'number' ? v : 0 };
+                    onChange({ ...cell, terms: next });
+                  }}
+                  w={80}
+                  size="xs"
+                  decimalScale={4}
+                  allowDecimal
+                  allowNegative
+                  step={0.1}
+                />
+                <Text size="sm" mb={4}>×</Text>
+                <Select
+                  label={i === 0 ? 'Symbol' : undefined}
+                  data={symbolOptions}
+                  value={term.symbol}
+                  onChange={v => {
+                    const next = [...(cell.terms ?? [])];
+                    next[i] = { ...next[i], symbol: v ?? '' };
+                    onChange({ ...cell, terms: next });
+                  }}
+                  size="xs"
+                  style={{ flex: 1 }}
+                  searchable
+                />
+                <ActionIcon
+                  variant="subtle"
+                  color="red"
+                  size="sm"
+                  mb={4}
+                  onClick={() => onChange({ ...cell, terms: (cell.terms ?? []).filter((_, j) => j !== i) })}
+                  aria-label="Remove term"
+                >
+                  <IconTrash size={12} />
+                </ActionIcon>
+              </Group>
+            ))}
+            <Button
+              size="xs"
+              variant="outline"
+              leftSection={<IconPlus size={12} />}
+              onClick={() =>
+                onChange({
+                  ...cell,
+                  terms: [...(cell.terms ?? []), { coefficient: 1, symbol: context.firstSymbol ?? '' }],
+                })
+              }
+            >
+              Add term
+            </Button>
+          </Stack>
+        )}
+
         {cell.kind === 'orderDepthTable' && (
           <>
             <Select
@@ -500,6 +584,8 @@ function DashboardCellEditor({
 }
 
 function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; context: DashboardContext }): ReactNode {
+  const algorithmCode = useStore(state => state.algorithmCode);
+
   switch (cell.kind) {
     case 'blank':
       return (
@@ -507,6 +593,18 @@ function DashboardCellRenderer({ cell, context }: { cell: DashboardCellConfig; c
           <Text c="dimmed">Choose a visualization for this cell.</Text>
         </VisualizerCard>
       );
+    case 'algorithmCode':
+      return algorithmCode ? (
+        <VisualizerCard title="Algorithm source (.py)">
+          <ScrollableCodeHighlight code={algorithmCode} language="python" />
+        </VisualizerCard>
+      ) : (
+        <VisualizerCard title="Algorithm source (.py)">
+          <Text c="dimmed">No Python file loaded. Drop a .py file on the home page to load it.</Text>
+        </VisualizerCard>
+      );
+    case 'derivedPrice':
+      return <DerivedPriceChart terms={cell.terms ?? []} />;
     case 'profitLoss':
       return <ProfitLossChart symbols={cell.symbols?.length ? cell.symbols : context.symbols} />;
     case 'position':

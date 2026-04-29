@@ -10,11 +10,13 @@ export interface State {
   round: string;
 
   algorithm: Algorithm | null;
+  algorithmCode: string | null;
 
   setColorScheme: (colorScheme: MantineColorScheme) => void;
   setIdToken: (idToken: string) => void;
   setRound: (round: string) => void;
   setAlgorithm: (algorithm: Algorithm | null) => void;
+  setAlgorithmCode: (code: string | null) => void;
 }
 
 export const useStore = create<State>()(
@@ -26,11 +28,13 @@ export const useStore = create<State>()(
       round: 'ROUND0',
 
       algorithm: null,
+      algorithmCode: null,
 
       setColorScheme: colorScheme => set({ colorScheme }),
       setIdToken: idToken => set({ idToken }),
       setRound: round => set({ round }),
       setAlgorithm: algorithm => set({ algorithm }),
+      setAlgorithmCode: code => set({ algorithmCode: code }),
     }),
     {
       name: 'imc-prosperity-2-visualizer',

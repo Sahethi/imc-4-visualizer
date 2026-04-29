@@ -7,16 +7,7 @@ import { bsGreeks, impliedVol } from '../../utils/blackScholes.ts';
 import { Chart } from './Chart.tsx';
 
 type XAxisType = 'timestamp' | 'moneyness';
-type YAxisType =
-  | 'iv'
-  | 'realizedVol'
-  | 'delta'
-  | 'gamma'
-  | 'vega'
-  | 'theta'
-  | 'midPrice'
-  | 'bidPrice'
-  | 'askPrice';
+type YAxisType = 'iv' | 'realizedVol' | 'delta' | 'gamma' | 'vega' | 'theta' | 'midPrice' | 'bidPrice' | 'askPrice';
 
 const Y_LABEL: Record<YAxisType, string> = {
   iv: 'Implied Volatility (ann. %)',

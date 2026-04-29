@@ -1,10 +1,27 @@
-import { Anchor, Code, Container, Stack, Text } from '@mantine/core';
+import { Anchor, Button, Code, Container, Stack, Text } from '@mantine/core';
 import { ReactNode } from 'react';
 import { ScrollableCodeHighlight } from '../../components/ScrollableCodeHighlight.tsx';
+import { useStore } from '../../store.ts';
 import { HomeCard } from './HomeCard.tsx';
 import { LoadFromFile } from './LoadFromFile.tsx';
 import { LoadFromProsperity } from './LoadFromProsperity.tsx';
 import { LoadFromUrl } from './LoadFromUrl.tsx';
+
+function AlgorithmCodeCard(): ReactNode {
+  const algorithmCode = useStore(state => state.algorithmCode);
+  const setAlgorithmCode = useStore(state => state.setAlgorithmCode);
+
+  if (!algorithmCode) return null;
+
+  return (
+    <HomeCard title="Algorithm source (.py)">
+      <Button size="xs" variant="subtle" color="red" onClick={() => setAlgorithmCode(null)} style={{ alignSelf: 'flex-end' }}>
+        Clear
+      </Button>
+      <ScrollableCodeHighlight code={algorithmCode} language="python" />
+    </HomeCard>
+  );
+}
 
 export function HomePage(): ReactNode {
   const exampleCode = `
@@ -155,6 +172,7 @@ class Trader:
         <LoadFromFile />
         <LoadFromProsperity />
         <LoadFromUrl />
+        <AlgorithmCodeCard />
       </Stack>
     </Container>
   );
