@@ -48,6 +48,7 @@ export function LoadFromFile(): ReactNode {
         setError(undefined);
 
         let hasAlgorithm = false;
+        let hasPython = false;
 
         try {
           for (const file of files) {
@@ -56,6 +57,7 @@ export function LoadFromFile(): ReactNode {
 
             if (ext === 'py') {
               setAlgorithmCode(content);
+              hasPython = true;
             } else if (ext === 'csv') {
               const trades = parseCsvTrades(content);
               setAlgorithm(algorithmFromTrades(trades));
@@ -68,6 +70,10 @@ export function LoadFromFile(): ReactNode {
 
           if (hasAlgorithm) {
             navigate('/visualizer');
+          } else if (hasPython) {
+            setTimeout(() => {
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 50);
           }
 
           resolve();
@@ -85,12 +91,14 @@ export function LoadFromFile(): ReactNode {
     const messages: string[] = [];
 
     for (const rejection of rejections) {
-      const errorType = {
-        'file-invalid-type': 'Invalid type.',
-        'file-too-large': 'File too large.',
-        'file-too-small': 'File too small.',
-        'too-many-files': 'Too many files.',
-      }[rejection.errors[0].code]!;
+      const code = rejection.errors[0]?.code ?? 'unknown';
+      const errorType =
+        {
+          'file-invalid-type': 'Invalid type.',
+          'file-too-large': 'File too large.',
+          'file-too-small': 'File too small.',
+          'too-many-files': 'Too many files.',
+        }[code] ?? `Rejected (${code}: ${rejection.errors[0]?.message ?? 'no message'})`;
 
       messages.push(`Could not load ${rejection.file.name}: ${errorType}`);
     }
